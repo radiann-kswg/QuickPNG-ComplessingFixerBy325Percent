@@ -1,0 +1,3 @@
+# scripts/fixer.py の依存
+# Pillow: PNG読み込み・縮小(LANCZOS)・パレット量子化(FASTOCTREE)
+Pillow>=10
