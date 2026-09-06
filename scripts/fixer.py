@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""ComplessingFixerBy325Permill 変換本体。
+"""QuickPNG-ComplessingFixerBy325Percent 変換本体。
 
 input-PNG/ の各PNGを、input-baseSize/ 内の対応画像の SCALE_PERCENT%（既定 325% = 3.25倍）の
 ピクセルサイズへアスペクト比を維持して縮小し、パレット量子化した圧縮PNGとして output-PNG/ へ
-平置きで出力する。透過（アルファ）は保持する。
+入力と同じフォルダ構成で出力する。透過（アルファ）は保持する。
 
 対応付け: 両者のファイル名から INPUT_KEY_RE / BASE_KEY_RE でキー（例: 数字）を抜き出して照合し、
 同キーが複数あれば縦横比が最も近いものを採用する。対応が無いファイルは、対応が取れた同一バッチの
@@ -77,20 +77,24 @@ def run(cfg: dict) -> int:
     for b in BASE_DIR.glob("*.png"):
         k = key_of(b.stem, cfg["BASE_KEY_RE"])
         if k:
-            bases.setdefault(k, []).append(Image.open(b).size)
+            with Image.open(b) as bi:
+                bases.setdefault(k, []).append(bi.size)
     if not inputs:
         print(f"入力なし: {INPUT_DIR}")
         return 0
-    OUTPUT_DIR.mkdir(exist_ok=True)
     items, n_fb, fb = plan(inputs, bases, cfg)
     for f, im, s in items:
+        src = im.size
         size = (max(1, round(im.width * s)), max(1, round(im.height * s)))
         out = im.convert("RGBA").resize(size, Image.LANCZOS)
         out = out.quantize(cfg["PALETTE_COLORS"], method=Image.Quantize.FASTOCTREE,
                            dither=Image.Dither.FLOYDSTEINBERG if cfg["DITHER"] else Image.Dither.NONE)
         out.info = {}
-        out.save(OUTPUT_DIR / f.name, optimize=True)
-        print(f"{im.size[0]}x{im.size[1]} -> {size[0]}x{size[1]} (x{s:.3f}) {f.name}")
+        dst = OUTPUT_DIR / f.relative_to(INPUT_DIR)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        out.save(dst, optimize=True)
+        im.close()
+        print(f"{src[0]}x{src[1]} -> {size[0]}x{size[1]} (x{s:.3f}) {f.relative_to(INPUT_DIR)}")
     print(f"完了: {len(items)}件 -> {OUTPUT_DIR}  (対応なし {n_fb}件は x{fb:.3f})")
     return 0
 

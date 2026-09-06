@@ -1,4 +1,4 @@
-# ComplessingFixerBy325Permill
+# QuickPNG-ComplessingFixerBy325Percent
 
 `input-PNG/` のPNGを、`input-baseSize/` の対応画像の **325%（3.25倍・`.env` で変更可）** のピクセルサイズへ
 アスペクト維持で縮小し、パレット量子化した圧縮PNGとして `output-PNG/` へ出力する、
@@ -24,7 +24,7 @@ Claude（Cowork / Claude Code）向けパイプライン設定。
    python3 scripts/fixer.py
    ```
 
-5. 結果は `output-PNG/<入力と同名>.png` に平置きで出力される
+5. 結果は `output-PNG/<入力と同じ相対パス>.png` に、入力のフォルダ構成のまま出力される
 
 ## 仕様
 
