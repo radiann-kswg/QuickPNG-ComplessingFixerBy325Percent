@@ -54,6 +54,13 @@ def key_of(name: str, pattern: str) -> str | None:
     return m.group(1).upper() if m else None
 
 
+def keys_of(p: Path, root: Path, pattern: str) -> list[str]:
+    """照合キー候補を優先順に返す: サブフォルダ名（同名フォルダ運用）→ ファイル名キー（フラット運用）。"""
+    rel = p.parent.relative_to(root).as_posix()
+    k = key_of(p.stem, pattern)
+    return ([rel.upper()] if rel != "." else []) + ([k] if k else [])
+
+
 def plan(inputs: list[Path], bases: dict[str, list[tuple[int, int]]], cfg: dict):
     """[(path, Image, scale)] と対応なし件数、採用したフォールバック倍率を返す。"""
     ratio = cfg["SCALE_PERCENT"] / 100
@@ -61,7 +68,7 @@ def plan(inputs: list[Path], bases: dict[str, list[tuple[int, int]]], cfg: dict)
     for f in inputs:
         im = Image.open(f)
         w, h = im.size
-        cands = bases.get(key_of(f.stem, cfg["INPUT_KEY_RE"]) or "")
+        cands = next((bases[k] for k in keys_of(f, INPUT_DIR, cfg["INPUT_KEY_RE"]) if k in bases), None)
         if cands:
             bw, _ = min(cands, key=lambda s: abs(s[0] / s[1] - w / h))  # 縦横比最近傍
             matched.append((f, im, ratio * bw / w))                     # 幅基準で等比
@@ -74,11 +81,11 @@ def plan(inputs: list[Path], bases: dict[str, list[tuple[int, int]]], cfg: dict)
 def run(cfg: dict) -> int:
     inputs = sorted(p for p in INPUT_DIR.rglob("*.png") if p.is_file())
     bases: dict[str, list[tuple[int, int]]] = {}
-    for b in BASE_DIR.glob("*.png"):
-        k = key_of(b.stem, cfg["BASE_KEY_RE"])
-        if k:
-            with Image.open(b) as bi:
-                bases.setdefault(k, []).append(bi.size)
+    for b in BASE_DIR.rglob("*.png"):
+        with Image.open(b) as bi:
+            size = bi.size
+        for k in keys_of(b, BASE_DIR, cfg["BASE_KEY_RE"]):
+            bases.setdefault(k, []).append(size)
     if not inputs:
         print(f"入力なし: {INPUT_DIR}")
         return 0
