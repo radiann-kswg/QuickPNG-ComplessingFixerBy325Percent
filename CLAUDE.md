@@ -48,6 +48,14 @@ pip install -r requirements.txt   # PEP 668 環境: --break-system-packages
 python3 scripts/fixer.py
 ```
 
+macOS では venv を使う（姉妹リポジトリと並べた親フォルダに共有 `.venv` を作ると使い回せる）:
+
+```bash
+python3 -m venv ../.venv
+../.venv/bin/pip install -r requirements.txt
+../.venv/bin/python scripts/fixer.py
+```
+
 処理内容（1ファイルあたり）: RGBA化 → 上記倍率で `LANCZOS` 縮小 → `quantize(method=FASTOCTREE)` で
 透過を保ったままパレット化 → `info` を空にして PNG 保存（`optimize=True`）。
 
