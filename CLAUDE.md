@@ -26,7 +26,7 @@
 ```
 SCALE_PERCENT=325             # 出力 = 基準画像 × この倍率(%)
 FALLBACK_SCALE_PERCENT=95.5   # 対応が1件も取れないときの、入力に対する倍率(%)
-PALETTE_COLORS=256            # パレット色数(2-256)
+PALETTE_COLORS=256            # パレット色数(2-256)。0 = 量子化しない（色数維持のRGBA可逆圧縮）
 DITHER=1                      # ディザリング(1/0)
 INPUT_KEY_RE=_(0x[A-Fa-f]|\d+|[^\W\d_]+)   # 入力名からキーを抜く正規表現(group(1))
 BASE_KEY_RE=(0x[A-Fa-f]|\d+)               # 基準名からキーを抜く正規表現(group(1))
@@ -57,7 +57,7 @@ python3 -m venv ../.venv
 ```
 
 処理内容（1ファイルあたり）: RGBA化 → 上記倍率で `LANCZOS` 縮小 → `quantize(method=FASTOCTREE)` で
-透過を保ったままパレット化 → `info` を空にして PNG 保存（`optimize=True`）。
+透過を保ったままパレット化（`PALETTE_COLORS=0` ならスキップ）→ `info` を空にして PNG 保存（`optimize=True`）。
 
 自己チェック: `python3 scripts/test_fixer.py`（合成画像のみ・実アセット不要）
 
@@ -71,7 +71,7 @@ Adobe for creativity コネクタで縮小のみ行う運用も可能だが、�
 
 - PIL で `Image.open(f); im.load()` が通る
 - 出力幅 ≈ 採用した基準画像の幅 × `SCALE_PERCENT/100`（±1px）、縦横比が入力と一致（±1px）
-- モードが `P`（パレット）で、元が透過なら出力も透過（角ピクセル alpha=0 等で確認）
+- モードが `P`（パレット。`PALETTE_COLORS=0` なら `RGBA`）で、元が透過なら出力も透過（角ピクセル alpha=0 等で確認）
 - 対応なし件数がログに出る。想定外に多ければ `INPUT_KEY_RE` / `BASE_KEY_RE` を見直す
 
 ## 既知の落とし穴

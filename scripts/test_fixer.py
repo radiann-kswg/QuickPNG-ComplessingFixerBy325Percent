@@ -24,3 +24,18 @@ with tempfile.TemporaryDirectory() as d:
     a.close(); b.close()
     assert "dpi" not in a.info and "exif" not in a.info                  # メタデータなし
 print("ok")
+
+# PALETTE_COLORS=0: 量子化せず、わずかに異なる色も統合されない
+with tempfile.TemporaryDirectory() as d:
+    d = Path(d)
+    fixer.INPUT_DIR, fixer.BASE_DIR, fixer.OUTPUT_DIR = d / "in", d / "base", d / "out"
+    fixer.INPUT_DIR.mkdir(); fixer.BASE_DIR.mkdir()
+    src = Image.new("RGBA", (300, 2))
+    src.putdata([(255 - i % 300 // 100, 255, 255, 255) for i in range(600)])  # 白〜ほぼ白 3色
+    src.save(fixer.INPUT_DIR / "w_1.png")
+    Image.new("P", (300, 2)).save(fixer.BASE_DIR / "1.png")
+    fixer.run({**fixer.DEFAULTS, "SCALE_PERCENT": 100.0, "PALETTE_COLORS": 0})
+    o = Image.open(fixer.OUTPUT_DIR / "w_1.png")
+    assert o.mode == "RGBA" and list(o.getdata()) == list(src.getdata()), o.mode
+    o.close()
+print("ok (lossless)")

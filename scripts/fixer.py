@@ -94,8 +94,9 @@ def run(cfg: dict) -> int:
         src = im.size
         size = (max(1, round(im.width * s)), max(1, round(im.height * s)))
         out = im.convert("RGBA").resize(size, Image.LANCZOS)
-        out = out.quantize(cfg["PALETTE_COLORS"], method=Image.Quantize.FASTOCTREE,
-                           dither=Image.Dither.FLOYDSTEINBERG if cfg["DITHER"] else Image.Dither.NONE)
+        if cfg["PALETTE_COLORS"]:  # 0 = 量子化しない（色を統合せずRGBAのまま可逆圧縮）
+            out = out.quantize(cfg["PALETTE_COLORS"], method=Image.Quantize.FASTOCTREE,
+                               dither=Image.Dither.FLOYDSTEINBERG if cfg["DITHER"] else Image.Dither.NONE)
         out.info = {}
         dst = OUTPUT_DIR / f.relative_to(INPUT_DIR)
         dst.parent.mkdir(parents=True, exist_ok=True)
