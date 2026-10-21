@@ -16,6 +16,7 @@ from __future__ import annotations
 import re
 import statistics
 import sys
+import subprocess
 from pathlib import Path
 
 from PIL import Image
@@ -104,6 +105,7 @@ def run(cfg: dict) -> int:
         im.close()
         print(f"{src[0]}x{src[1]} -> {size[0]}x{size[1]} (x{s:.3f}) {f.relative_to(INPUT_DIR)}")
     print(f"完了: {len(items)}件 -> {OUTPUT_DIR}  (対応なし {n_fb}件は x{fb:.3f})")
+    subprocess.run([sys.executable, str(Path(__file__).with_name("iloveapi_compress.py"))])  # 後段: iLoveAPI 圧縮（.env で有効時のみ）
     return 0
 
 
